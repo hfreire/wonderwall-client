@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
                 broker = argv[++i];
                 break;
             default:
-                fprintf(stderr, "%s: %c: uknown option\n", argv[0], argv[i][1]);
+                fprintf(stderr, "%s: %c: unknown option\n", argv[0], argv[i][1]);
                 print_usage();
 
                 exit(0);
