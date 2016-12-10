@@ -8,6 +8,7 @@
 * fib
 
 ### How to build (cross-compile)
+* `Note: Need to install raspbian sysroot in order to cross-compile.`
 ```
 mkdir -p build && \
 cd build && \
