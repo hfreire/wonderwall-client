@@ -13,6 +13,16 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
+#include <jansson.h>
+
+#include <curl/curl.h>
+#include <unistd.h>
+#include <signal.h>
+#include <string.h>
+
+const int DEFAULT_DISPLAY_TIMEOUT = 10;
+char filename[FILENAME_MAX] = "/tmp/wonderwall.data";
+
 void die(const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
@@ -70,6 +80,155 @@ void die_on_amqp_error(amqp_rpc_reply_t x, char const *context) {
     exit(1);
 }
 
+json_t *parse_json(const char *text) {
+    json_t *root;
+    json_error_t error;
+
+    root = json_loads(text, 0, &error);
+
+    if (root) {
+        return root;
+    } else {
+        fprintf(stderr, "error: jansson failed to parse JSON on line %d: %s\n", error.line, error.text);
+
+        return NULL;
+    }
+}
+
+int download_image(const char *url) {
+    FILE *file;
+    CURL *curl;
+    CURLcode code;
+
+    if (!(file = fopen(filename, "wb"))) {
+        fprintf(stderr, "error: could not open temporary file\n");
+
+        return -1;
+    }
+
+    curl = curl_easy_init();
+    if (!curl) {
+        fprintf(stderr, "error: curl failed to initialize\n");
+
+        return -1;
+    }
+
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
+
+    code = curl_easy_perform(curl);
+    if (code) {
+        fprintf(stderr, "error: curl failed to download URL with error code %d\n", code);
+
+        curl_easy_cleanup(curl);
+        fclose(file);
+
+        return -1;
+    }
+
+    curl_easy_cleanup(curl);
+    fclose(file);
+
+    return 0;
+}
+
+void draw_image(const unsigned int timeout) {
+    pid_t child_pid;
+
+    child_pid = fork();
+
+    if (child_pid == 0) {
+        char *arg[] = {"fbi", "--noverbose", "-a", filename};
+
+        if (execvp(arg[0], arg) < 0) {
+            fprintf(stderr, "Failed to show image\n");
+        }
+
+        exit(0);
+    } else {
+        sleep(timeout);
+
+        kill(child_pid, SIGKILL);
+    }
+}
+
+void display_image(const char *url, const unsigned int timeout) {
+    fprintf(stdout, "Displaying %s for %u sec\n", url, timeout);
+
+    if (download_image(url) < 0) {
+        fprintf(stderr, "Failed to download URL: %s\n", url);
+        return;
+    }
+
+    draw_image(timeout);
+}
+
+void handle_message(amqp_message_t message) {
+    char *body = NULL;
+    json_t *json_body;
+    json_t *json_url;
+    json_t *json_timeout;
+    const char *url = NULL;
+    unsigned int timeout = DEFAULT_DISPLAY_TIMEOUT;
+
+    if (message.body.len <= 0) {
+        return;
+    }
+
+    body = (char *) malloc((message.body.len + 1) * sizeof(char *));
+    if (body == NULL) {
+        fprintf(stderr, "Failed to allocate memory for message body\n");
+    }
+    memset(body, '\0', (message.body.len + 1) * sizeof(char *));
+    memcpy(body, message.body.bytes, message.body.len);
+    fprintf(stdout, "Handling message %s\n", body);
+
+    json_body = parse_json(body);
+    if (!json_body) {
+        fprintf(stderr, "Failed to parse URL because of malformed JSON message\n");
+
+        return;
+    }
+
+    json_url = json_object_get(json_body, "url");
+    if (!json_url) {
+        fprintf(stderr, "Failed to parse URL because of invalid JSON message\n");
+
+        json_decref(json_body);
+
+        return;
+    }
+
+    url = json_string_value(json_url);
+    if (!url || strlen(url) == 0) {
+        fprintf(stderr, "Failed to parse URL because of invalid JSON type\n");
+
+        json_decref(json_body);
+
+        return;
+    }
+
+    json_timeout = json_object_get(json_body, "timeout");
+    if (json_timeout) {
+        timeout = (unsigned int) json_integer_value(json_timeout);
+        if (!timeout) {
+            fprintf(stderr, "Failed to parse timeout because of invalid JSON type\n");
+
+            json_decref(json_body);
+
+            return;
+        }
+    }
+
+    display_image(url, timeout);
+
+    json_decref(json_body);
+
+    free(body);
+
+    remove(filename);
+}
 
 static void run(amqp_connection_state_t conn) {
     amqp_frame_t frame;
@@ -137,6 +296,10 @@ static void run(amqp_connection_state_t conn) {
             }
 
         } else {
+            handle_message(envelope.message);
+
+            memset(envelope.message.body.bytes, '\0', envelope.message.body.len);
+
             amqp_destroy_envelope(&envelope);
         }
     }
