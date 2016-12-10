@@ -1,0 +1,13 @@
+[Unit]
+Description=wonderwall client daemon
+After=multi-user.target
+
+[Service]
+Type=simple
+KillMode=process
+EnvironmentFile=/etc/default/wonderwall
+ExecStart=/opt/wonderwall/bin/wonderwalld $BROKER_HOSTNAME $BROKER_PORT $BROKER_USERNAME $BROKER_PASSWORD $BROKER_QUEUE
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
