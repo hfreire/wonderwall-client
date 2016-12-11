@@ -34,6 +34,8 @@ else (JANSSON_LIBRARIES AND JANSSON_INCLUDE_DIRS)
             /usr/local/lib
             /opt/local/lib
             /sw/lib
+            PATH_SUFFIXES
+            arm-linux-gnueabihf
             )
 
     set(JANSSON_INCLUDE_DIRS
