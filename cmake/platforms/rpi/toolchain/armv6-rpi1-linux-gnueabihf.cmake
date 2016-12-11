@@ -2,14 +2,21 @@
 # CMake defines to cross-compile to ARM/Linux on BCM2708 using glibc.
 #
 
-set(CMAKE_SYSTEM_NAME Linux)
-set(CMAKE_SYSTEM_PROCESSOR arm)
-
 set(CMAKE_C_COMPILER armv6-rpi1-linux-gnueabihf-gcc)
 set(CMAKE_CXX_COMPILER armv6-rpi1-linux-gnueabihf-g++)
 set(CMAKE_ASM_COMPILER armv6-rpi1-linux-gnueabihf-gcc)
 
 add_definitions("-mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -marm")
+
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR arm)
+
+set(SYSROOT "${PROJECT_SOURCE_DIR}/platforms/rpi/rootfs")
+
+set(CMAKE_FIND_ROOT_PATH "${SYSROOT}")
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 set(FLAGS "-isystem ${SYSROOT}/usr/include/arm-linux-gnueabihf -Wl,-rpath-link,${SYSROOT}/opt/vc/lib -Wl,-rpath-link,${SYSROOT}/lib/arm-linux-gnueabihf -Wl,-rpath-link,${SYSROOT}/usr/lib/arm-linux-gnueabihf -Wl,-rpath-link,${SYSROOT}/usr/local/lib")
 
