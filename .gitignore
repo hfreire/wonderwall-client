@@ -36,5 +36,5 @@ cmake-build-debug
 .idea
 *.iml
 
-./build
-./platforms
+build
+rootfs
