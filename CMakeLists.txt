@@ -5,7 +5,10 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(SOURCE_FILES src/wonderwalld.c)
+set(SOURCE_FILES src/wonderwalld.c
+        src/amqp.c src/amqp.h
+        src/download.c src/download.h
+        src/display.c src/display.h)
 add_executable(wonderwalld ${SOURCE_FILES})
 
 find_package(RABBITMQ REQUIRED)
