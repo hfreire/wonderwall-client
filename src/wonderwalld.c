@@ -113,7 +113,7 @@ int main(int argc, char const *const *argv) {
 
 
     if (argc < 6) {
-        fprintf(stderr, "Usage: wonderwalld host port username password\n");
+        fprintf(stderr, "Usage: wonderwalld host port username password queue\n");
         return 1;
     }
 

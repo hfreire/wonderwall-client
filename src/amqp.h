@@ -26,6 +26,6 @@ void connect(const char *hostname,
              void (*handle_message)(char *)
 );
 
-static void listen(amqp_connection_state_t conn, void (*handle_message)(char *));
+void listen(amqp_connection_state_t conn, void (*handle_message)(char *));
 
 #endif //WONDERWALLD_AMQP_H
