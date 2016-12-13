@@ -5,10 +5,7 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
 
-set(SOURCE_FILES src/wonderwalld.c
-        src/amqp.c src/amqp.h
-        src/download.c src/download.h
-        src/display.c src/display.h)
+set(SOURCE_FILES src/wonderwalld.c)
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 find_package(RabbitMQ REQUIRED)
