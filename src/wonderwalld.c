@@ -8,14 +8,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
-#include <signal.h>
 #include <stdbool.h>
 
 #include <amqp_tcp_socket.h>
 #include <jansson.h>
 #include <curl/curl.h>
 
+#include "SDL.h"
+#include "SDL_image.h"
 
 const int DEFAULT_DISPLAY_TIMEOUT = 10;
 char filename[FILENAME_MAX] = "/tmp/wonderwall.data";
@@ -24,6 +24,8 @@ int download_image(const char *url, const char *filename) {
     FILE *file;
     CURL *curl;
     CURLcode code;
+
+    fprintf(stdout, "Downloading %s\n", url);
 
     if (!(file = fopen(filename, "wb"))) {
         fprintf(stderr, "error: could not open temporary file\n");
@@ -59,23 +61,55 @@ int download_image(const char *url, const char *filename) {
 }
 
 void display_image(const char *filename, const unsigned int timeout) {
-    pid_t child_pid;
+    SDL_Surface *screen = NULL;
+    SDL_Surface *image = NULL;
+    const SDL_VideoInfo *videoInfo = NULL;
 
-    child_pid = fork();
+    fprintf(stdout, "Displaying %s for %u sec\n", filename, timeout);
 
-    if (child_pid == 0) {
-        char *arg[] = {"fbi", "-T", "1", "--noverbose", "-a", (char *) filename};
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        fprintf(stderr, "SDL_Init failed - %s\n", SDL_GetError());
 
-        if (execvp(arg[0], arg) < 0) {
-            fprintf(stderr, "Failed to show image\n");
-        }
-
-        exit(0);
-    } else {
-        sleep(timeout);
-
-        kill(child_pid, SIGTERM);
+        return;
     }
+
+    videoInfo = SDL_GetVideoInfo();
+
+    if (videoInfo == 0) {
+        fprintf(stderr, "SDL_GetVideoInfo failed - %s\n", SDL_GetError());
+        SDL_Quit();
+
+        return;
+    }
+
+    image = IMG_Load(filename);
+
+    if (!image) {
+        fprintf(stderr, "IMG_Load failed - %s\n", IMG_GetError());
+        SDL_Quit();
+
+        return;
+    }
+
+    screen = SDL_SetVideoMode(image->w, image->h, videoInfo->vfmt->BitsPerPixel, SDL_HWSURFACE);
+
+    if (!screen) {
+        fprintf(stderr, "SetVideoMode failed - %s\n", SDL_GetError());
+        SDL_FreeSurface(image);
+        SDL_Quit();
+
+        return;
+    }
+
+    SDL_BlitSurface(image, 0, screen, 0);
+
+    SDL_Delay(timeout * 1000);
+
+    SDL_FreeSurface(image);
+
+    SDL_Quit();
+
+    return;
 }
 
 void die(const char *fmt, ...) {
@@ -333,7 +367,6 @@ void handle_message(char *message) {
         }
     }
 
-    fprintf(stdout, "Displaying %s for %u sec\n", url, timeout);
     if (download_image(url, filename) < 0) {
         fprintf(stderr, "Failed to download URL: %s\n", url);
 
@@ -351,7 +384,7 @@ void handle_message(char *message) {
     remove(filename);
 }
 
-int main(int argc, char const *const *argv) {
+int main(int argc, char **argv) {
     char const *hostname;
     char const *username;
     char const *password;

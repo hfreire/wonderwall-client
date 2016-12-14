@@ -9,12 +9,14 @@ set(CMAKE_SYSTEM_PROCESSOR arm)
 
 set(SYSROOT "${PROJECT_SOURCE_DIR}/platforms/rpi/rootfs")
 
+set(CMAKE_SYSTEM_PREFIX_PATH "${SYSROOT}/lib/arm-linux-gnueabihf;${SYSROOT}/usr/lib/arm-linux-gnueabihf")
+
 set(CMAKE_FIND_ROOT_PATH "${SYSROOT}")
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
-set(FLAGS "-isystem ${SYSROOT}/usr/include/arm-linux-gnueabihf -Wl,-rpath-link,${SYSROOT}/opt/vc/lib -Wl,-rpath-link,${SYSROOT}/lib/arm-linux-gnueabihf -Wl,-rpath-link,${SYSROOT}/usr/lib/arm-linux-gnueabihf -Wl,-rpath-link,${SYSROOT}/usr/local/lib")
+set(FLAGS "-isystem ${SYSROOT}/usr/include/arm-linux-gnueabihf -Wl,-rpath-link,${SYSROOT}/opt/vc/lib -Wl,-rpath-link,${SYSROOT}/lib/arm-linux-gnueabihf -Wl,-rpath-link,${SYSROOT}/usr/lib/arm-linux-gnueabihf -Wl,-rpath-link,${SYSROOT}/usr/local/lib -Wl,-rpath-link,${SYSROOT}/usr/lib/arm-linux-gnueabihf/pulseaudio")
 
 unset(CMAKE_C_FLAGS CACHE)
 unset(CMAKE_CXX_FLAGS CACHE)
