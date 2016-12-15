@@ -7,16 +7,17 @@ RUN apt-get update && \
         librabbitmq1 \
         libcurl3 \
         libjansson4 \
-        fbi
+        libsdl1.2 \
+        libsdl-image1.2
 
 ENV WONDERWALL_HOME /opt/wonderwall
-ENV PATH WONDERWALL_HOME/bin:$PATH
+ENV PATH $WONDERWALL_HOME/bin:$PATH
 
 RUN mkdir -p $WONDERWALL_HOME/bin
 COPY build/wonderwalld $WONDERWALL_HOME/bin/wonderwalld
 RUN chmod +x $WONDERWALL_HOME/bin/wonderwalld
 
-COPY share/docker/start.sh /start.sh
-RUN chmod +x /start.sh
+COPY share/docker/run.sh /run.sh
+RUN chmod +x /run.sh
 
-CMD ["/start.sh"]
+CMD ["/run.sh"]
