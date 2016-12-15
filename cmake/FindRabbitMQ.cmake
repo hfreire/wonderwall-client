@@ -2,22 +2,30 @@
 # This CMake file tries to find the the RabbitMQ library
 #
 # The following variables are set:
-#   RABBITMQ_FOUND - System has RabbitMQ client
-#   RABBITMQ_LIBRARIES - The RabbitMQ client library
-#   RABBITMQ_HEADERS - The RabbitMQ client headers
+#   RABBITMQ_FOUND - RabbitMQ client library has been found in the system
+#   RABBITMQ_LIBRARIES - RabbitMQ client library path
+#   RABBITMQ_INCLUDE_DIRS - RabbitMQ client headers path
+#
 
-include(CheckCSourceCompiles)
+if (RABBITMQ_LIBRARIES AND RABBITMQ_INCLUDE_DIRS)
+    # in cache already
+    set(RABBITMQ_FOUND TRUE)
+else (RABBITMQ_LIBRARIES AND RABBITMQ_INCLUDE_DIRS)
+    find_library(RABBITMQ_LIBRARIES
+            NAMES
+            rabbitmq
+            )
 
-find_library(RABBITMQ_LIBRARIES NAMES rabbitmq PATH_SUFFIXES arm-linux-gnueabihf)
-find_path(RABBITMQ_HEADERS amqp.h)
+    find_path(
+            RABBITMQ_INCLUDE_DIRS
+            amqp.h
+    )
 
-if(${RABBITMQ_LIBRARIES} MATCHES "NOTFOUND")
-    set(RABBITMQ_FOUND FALSE CACHE INTERNAL "")
-    message(STATUS "RabbitMQ library not found.")
-    unset(RABBITMQ_LIBRARIES)
-else()
-    set(RABBITMQ_FOUND TRUE CACHE INTERNAL "")
-    message(STATUS "Found RabbitMQ library: ${RABBITMQ_LIBRARIES}")
-endif()
+    include(FindPackageHandleStandardArgs)
+    find_package_handle_standard_args(RabbitMQ DEFAULT_MSG
+            RABBITMQ_LIBRARIES RABBITMQ_INCLUDE_DIRS)
 
-set(CMAKE_REQUIRED_INCLUDES ${RABBITMQ_HEADERS})
+    # show the RABBITQ_INCLUDE_DIRS and RABBITMQ_LIBRARIES variables only in the advanced view
+    mark_as_advanced(RABBITMQ_INCLUDE_DIRS RABBITMQ_LIBRARIES)
+
+endif (RABBITMQ_LIBRARIES AND RABBITMQ_INCLUDE_DIRS)

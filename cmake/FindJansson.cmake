@@ -1,15 +1,10 @@
-# - Try to find Jansson
-# Once done this will define
 #
-#  JANSSON_FOUND - system has Jansson
-#  JANSSON_INCLUDE_DIRS - the Jansson include directory
-#  JANSSON_LIBRARIES - Link these to use Jansson
+# This CMake file tries to find the the Jansson library
 #
-#  Copyright (c) 2011 Lee Hambley <lee.hambley@gmail.com>
-#
-#  Redistribution and use is allowed according to the terms of the New
-#  BSD license.
-#  For details see the accompanying COPYING-CMAKE-SCRIPTS file.
+# The following variables are set:
+#   JANSSON_FOUND - Jansson library has been found in the system
+#   JANSSON_INCLUDE_DIRS - Jansson library path
+#   JANSSON_LIBRARIES - Jansson headers path
 #
 
 if (JANSSON_LIBRARIES AND JANSSON_INCLUDE_DIRS)
@@ -34,8 +29,6 @@ else (JANSSON_LIBRARIES AND JANSSON_INCLUDE_DIRS)
             /usr/local/lib
             /opt/local/lib
             /sw/lib
-            PATH_SUFFIXES
-            arm-linux-gnueabihf
             )
 
     set(JANSSON_INCLUDE_DIRS
