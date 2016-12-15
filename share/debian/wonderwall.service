@@ -4,9 +4,12 @@ After=multi-user.target
 
 [Service]
 Type=simple
-KillMode=process
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=wonderwalld
 EnvironmentFile=/etc/default/wonderwall
 ExecStart=/opt/wonderwall/bin/wonderwalld $BROKER_HOSTNAME $BROKER_PORT $BROKER_USERNAME $BROKER_PASSWORD $BROKER_QUEUE
+WorkingDirectory=/opt/wonderwall
 Restart=on-failure
 
 [Install]
