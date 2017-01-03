@@ -103,7 +103,6 @@ int main(int argc, char **argv) {
     char const *exchange;
     char const *bindingkey;
 
-
     if (argc < 6) {
         fprintf(stderr, "Usage: wonderwalld host port username password queue\n");
         return 1;
@@ -116,6 +115,8 @@ int main(int argc, char **argv) {
     queue = argv[5];
     exchange = "amq.direct";
     bindingkey = "test queue";
+
+    fprintf(stdout, "Connecting to wonderwall server %s:%i\n", hostname, port);
 
     connect_amqp(hostname, port, username, password, queue, exchange, bindingkey, handle_message);
 
