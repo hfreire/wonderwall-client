@@ -15,7 +15,7 @@ void display_image(const char *filename, const unsigned int timeout) {
     SDL_Surface *image = NULL;
     const SDL_VideoInfo *videoInfo = NULL;
 
-    fprintf(stdout, "Displaying %s for %u sec\n", filename, timeout);
+    fprintf(stdout, "Displaying image for %u sec\n", timeout);
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "SDL_Init failed - %s\n", SDL_GetError());
