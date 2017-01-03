@@ -1,16 +1,16 @@
 [Unit]
 Description=wonderwall client daemon
-After=multi-user.target
+After=syslog.target network-online.target
 
 [Service]
-Type=simple
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=wonderwalld
 EnvironmentFile=/etc/default/wonderwall
-ExecStart=/opt/wonderwall/bin/wonderwalld $BROKER_HOSTNAME $BROKER_PORT $BROKER_USERNAME $BROKER_PASSWORD $BROKER_QUEUE
+ExecStart=/bin/sh -c "/usr/bin/stdbuf -oL /opt/wonderwall/bin/wonderwalld $BROKER_HOSTNAME $BROKER_PORT $BROKER_USERNAME $BROKER_PASSWORD $BROKER_QUEUE"
 WorkingDirectory=/opt/wonderwall
-Restart=on-failure
+Restart=always
+RestartSec=2
 
 [Install]
 WantedBy=multi-user.target
