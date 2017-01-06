@@ -13,6 +13,8 @@
 
 #include <string.h>
 
+amqp_connection_state_t conn;
+
 void die(const char *fmt, ...) {
     fprintf(stderr, "%s\n", fmt);
     exit(1);
@@ -171,7 +173,6 @@ void connect_amqp(const char *hostname,
 ) {
     int status;
     amqp_socket_t *socket = NULL;
-    amqp_connection_state_t conn;
 
     conn = amqp_new_connection();
 
@@ -197,7 +198,9 @@ void connect_amqp(const char *hostname,
     die_on_amqp_error(amqp_get_rpc_reply(conn), "Consuming");
 
     listen_amqp(conn, handle_message);
+}
 
+void disconnect_amqp() {
     die_on_amqp_error(amqp_channel_close(conn, 1, AMQP_REPLY_SUCCESS), "Closing channel");
     die_on_amqp_error(amqp_connection_close(conn, AMQP_REPLY_SUCCESS), "Closing connection");
     die_on_error(amqp_destroy_connection(conn), "Ending connection");

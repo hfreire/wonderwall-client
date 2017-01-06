@@ -8,6 +8,13 @@
 #ifndef WONDERWALLD_DISPLAY_H
 #define WONDERWALLD_DISPLAY_H
 
-void display_image(const char *filename, const unsigned int timeout);
+#define WONDERWALLD_DISPLAY_MAX_WIDTH 0;
+#define WONDERWALLD_DISPLAY_MAX_HEIGHT 0;
+
+void init_display(int width, int height);
+
+void show_image(const char *filename, const unsigned int timeout);
+
+void destroy_display();
 
 #endif //WONDERWALLD_DISPLAY_H

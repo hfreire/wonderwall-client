@@ -22,4 +22,6 @@ void connect_amqp(const char *hostname,
                   void (*handle_message)(char *)
 );
 
+void disconnect_amqp();
+
 #endif //WONDERWALLD_AMQP_H

@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
 
 #include <jansson.h>
 
@@ -15,6 +16,18 @@
 #include "amqp.h"
 #include "download.h"
 #include "display.h"
+
+void handle_shutdown(int signal) {
+    fprintf(stdout, "Received signal %i\n", signal);
+
+    fprintf(stdout, "Disconnecting from AMQP server\n");
+    disconnect_amqp();
+
+    fprintf(stdout, "Closing display\n");
+    destroy_display();
+
+    exit(0);
+}
 
 json_t *parse_json(const char *text) {
     json_t *root;
@@ -87,7 +100,7 @@ void handle_message(char *message) {
         return;
     }
 
-    display_image(filename, timeout);
+    show_image(filename, timeout);
 
     json_decref(json_message);
 
@@ -95,6 +108,9 @@ void handle_message(char *message) {
 }
 
 int main(int argc, char **argv) {
+    struct sigaction action;
+    int width;
+    int height;
     char const *hostname;
     char const *username;
     char const *password;
@@ -103,8 +119,14 @@ int main(int argc, char **argv) {
     char const *exchange;
     char const *bindingkey;
 
+    memset(&action, 0, sizeof(struct sigaction));
+    action.sa_handler = handle_shutdown;
+
+    sigaction(SIGINT, &action, NULL);
+    sigaction(SIGTERM, &action, NULL);
+
     if (argc < 6) {
-        fprintf(stderr, "Usage: wonderwalld host port username password queue\n");
+        fprintf(stderr, "Usage: wonderwalld host port username password queue [width] [height]\n");
         return 1;
     }
 
@@ -116,8 +138,21 @@ int main(int argc, char **argv) {
     exchange = "amq.direct";
     bindingkey = "test queue";
 
-    fprintf(stdout, "Connecting to wonderwall server %s:%i\n", hostname, port);
+    if (argv[6] != NULL && argv[7] != NULL) {
+        width = atoi(argv[6]);
+        height = atoi(argv[7]);
 
+        fprintf(stdout, "Opening display in %dx%d video mode\n", width, height);
+    } else {
+        width = WONDERWALLD_DISPLAY_MAX_WIDTH;
+        height = WONDERWALLD_DISPLAY_MAX_HEIGHT;
+
+        fprintf(stdout, "Opening display in fullscreen video mode\n");
+    }
+
+    init_display(width, height);
+
+    fprintf(stdout, "Connecting to AMQP server %s:%i\n", hostname, port);
     connect_amqp(hostname, port, username, password, queue, exchange, bindingkey, handle_message);
 
     return 0;
