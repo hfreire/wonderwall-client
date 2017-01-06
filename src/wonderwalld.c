@@ -141,18 +141,13 @@ int main(int argc, char **argv) {
     if (argv[6] != NULL && argv[7] != NULL) {
         width = atoi(argv[6]);
         height = atoi(argv[7]);
-
-        fprintf(stdout, "Opening display in %dx%d video mode\n", width, height);
     } else {
         width = WONDERWALLD_DISPLAY_MAX_WIDTH;
         height = WONDERWALLD_DISPLAY_MAX_HEIGHT;
-
-        fprintf(stdout, "Opening display in fullscreen video mode\n");
     }
 
     init_display(width, height);
 
-    fprintf(stdout, "Connecting to AMQP server %s:%i\n", hostname, port);
     connect_amqp(hostname, port, username, password, queue, exchange, bindingkey, handle_message);
 
     return 0;

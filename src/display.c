@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#include <SDL2/SDL_video.h>
+#include <stdbool.h>
 #include "display.h"
 
 #include "SDL2/SDL.h"
@@ -38,6 +40,26 @@ void print_available_renders() {
     }
 }
 
+void print_display_info() {
+    SDL_DisplayMode displayMode;
+    SDL_RendererInfo rendererInfo;
+
+    if (SDL_GetWindowDisplayMode(window, &displayMode) != 0) {
+        fprintf(stderr, "SDL_GetWindowDisplayMode failed: %s\n", SDL_GetError());
+
+        return;
+    }
+
+    if (SDL_GetRendererInfo(renderer, &rendererInfo) != 0) {
+        fprintf(stderr, "SDL_GetRendererInfo failed: %s\n", SDL_GetError());
+
+        return;
+    }
+
+    fprintf(stdout, "Display using %s render with video mode %dx%d@%dHz\n",
+            rendererInfo.name, display_width, display_height, displayMode.refresh_rate);
+}
+
 void show_black_screen() {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
@@ -46,9 +68,16 @@ void show_black_screen() {
 }
 
 void init_display(int width, int height) {
-    print_available_renders();
+    bool fullscreen = width == 0 && height == 0;
+    SDL_DisplayMode displayMode;
 
-    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
+    if (fullscreen) {
+        fprintf(stdout, "Opening display in fullscreen\n");
+    } else {
+        fprintf(stdout, "Opening display with %d width and %d height\n", width, height);
+    }
+
+    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2");
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");  // make the scaled rendering look smoother.
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -57,49 +86,51 @@ void init_display(int width, int height) {
         exit(1);
     }
 
-    window = SDL_CreateWindow("Wonderwall", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
-                              width == 0 && height == 0 ?
-                              SDL_WINDOW_FULLSCREEN_DESKTOP :
-                              SDL_WINDOW_SHOWN);
-    if (!window) {
-        fprintf(stderr, "SDL_CreateWindow failed - %s\n", SDL_GetError());
+    SDL_ShowCursor(SDL_DISABLE);
+
+    if (SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &window, &renderer) !=
+        0) { // opengles2 will always use window in fullscreen.
+        print_available_renders();
+
+        fprintf(stderr, "SDL_CreateWindowAndRenderer failed - %s\n", SDL_GetError());
         SDL_Quit();
 
         exit(1);
     }
 
-    SDL_GetWindowSize(window, &display_width, &display_height);
-
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    if (!renderer) {
-        fprintf(stderr, "SDL_CreateRenderer failed - %s\n", SDL_GetError());
+    if (SDL_GetWindowDisplayMode(window, &displayMode) != 0) {
+        fprintf(stderr, "SDL_GetWindowDisplayMode failed: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         SDL_Quit();
 
         exit(1);
     }
 
-    SDL_RendererInfo rendererInfo;
-    if (SDL_GetRendererInfo(renderer, &rendererInfo) != 0) {
-        fprintf(stderr, "SDL_GetRendererInfo failed: %s\n", SDL_GetError());
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-
-        exit(1);
+    if (fullscreen) {
+        display_width = displayMode.w;
+        display_height = displayMode.h;
+    } else {
+        display_width = width;
+        display_height = height;
     }
-    fprintf(stdout, "Display using %s for rendering\n", rendererInfo.name);
-
-    SDL_RenderSetLogicalSize(renderer, width, height);
 
     show_black_screen();
+
+    print_display_info();
 
     return;
 }
 
 void destroy_display() {
-    SDL_DestroyRenderer(renderer);
-    //SDL_GL_DeleteContext(gl_context);
-    SDL_DestroyWindow(window);
+    if (renderer) {
+        SDL_DestroyRenderer(renderer);
+    }
+
+    if (window) {
+        SDL_DestroyWindow(window);
+    }
+
     SDL_Quit();
 }
 
@@ -131,8 +162,6 @@ void show_image(const char *filename, const unsigned int timeout) {
     SDL_Rect rectangle;
     SDL_Texture *texture;
 
-    fprintf(stdout, "Showing image for %u sec\n", timeout);
-
     texture = IMG_LoadTexture(renderer, filename);
     if (!texture) {
         fprintf(stderr, "IMG_Load failed - %s\n", IMG_GetError());
@@ -146,6 +175,8 @@ void show_image(const char *filename, const unsigned int timeout) {
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, texture, NULL, &rectangle);
     SDL_RenderPresent(renderer);
+
+    fprintf(stdout, "Showing %dx%d image for %u sec\n", rectangle.w, rectangle.h, timeout);
 
     SDL_Delay(timeout * 1000);
 

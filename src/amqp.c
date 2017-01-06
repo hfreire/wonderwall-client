@@ -174,6 +174,8 @@ void connect_amqp(const char *hostname,
     int status;
     amqp_socket_t *socket = NULL;
 
+    fprintf(stdout, "Connecting to AMQP server %s:%i\n", hostname, port);
+
     conn = amqp_new_connection();
 
     socket = amqp_tcp_socket_new(conn);
