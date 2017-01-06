@@ -109,8 +109,8 @@ void handle_message(char *message) {
 
 int main(int argc, char **argv) {
     struct sigaction action;
-    int width;
-    int height;
+    int width = DISPLAY_MAX_WIDTH;
+    int height = DISPLAY_MAX_HEIGHT;
     char const *hostname;
     char const *username;
     char const *password;
@@ -141,9 +141,6 @@ int main(int argc, char **argv) {
     if (argv[6] != NULL && argv[7] != NULL) {
         width = atoi(argv[6]);
         height = atoi(argv[7]);
-    } else {
-        width = WONDERWALLD_DISPLAY_MAX_WIDTH;
-        height = WONDERWALLD_DISPLAY_MAX_HEIGHT;
     }
 
     init_display(width, height);

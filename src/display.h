@@ -8,8 +8,8 @@
 #ifndef WONDERWALLD_DISPLAY_H
 #define WONDERWALLD_DISPLAY_H
 
-#define WONDERWALLD_DISPLAY_MAX_WIDTH 0;
-#define WONDERWALLD_DISPLAY_MAX_HEIGHT 0;
+#define DISPLAY_MAX_WIDTH 0;
+#define DISPLAY_MAX_HEIGHT 0;
 
 void init_display(int width, int height);
 

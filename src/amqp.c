@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include <unistd.h>
+
 #include <string.h>
 
 amqp_connection_state_t conn;
@@ -183,10 +185,13 @@ void connect_amqp(const char *hostname,
         die("creating TCP socket");
     }
 
-    status = amqp_socket_open(socket, hostname, port);
-    if (status) {
-        die("opening TCP socket");
-    }
+    do {
+        status = amqp_socket_open(socket, hostname, port);
+
+        if (status) {
+            sleep(5);
+        }
+    } while (status);
 
     die_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, username, password), "Logging in");
     amqp_channel_open(conn, 1);
